@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Lunex Smart Light</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="nome_do_dispositivo">Nome do dispositivo</string>
+    <string name="empty">vazio</string>
+    <string name="paired_devices">DISPOSITIVOS PAREADOS</string>
+    <string name="search_devices">Encontrando dispositivos…</string>
+    <string name="esp_32">Esp 32</string>
+    <string name="_32_34_89_89">32:34:89:89</string>
+    <string name="lista_de_dispositivos">Lista de dispositivos</string>
+    <string name="conectar">Conectar</string>
+    <string name="textview"> </string>
+    <string name="avancado">    Avançado</string>
+    <string name="padaria">Neutro</string>
+    <string name="acougue">Quente</string>
+    <string name="refrigerador">Frio</string>
+    <string name="todo">TODO</string>
+    <string name="menu_principal">Inicial</string>
+    <string name="menu_avancado">Avançado</string>
+    <string name="menu_bluetooth">Bluetooth</string>
+    <string name="menu_lunex">Lunex</string>
+    <string name="message" />
+    <string name="temperatura">Temperatura: -</string>
+    <string name="buscar_dispositivos">BUSCAR DISPOSITIVOS</string>
+    <string name="renomear_dispositivo">RENOMEAR DISPOSITIVO</string>
+    <string name="no_device_connected">NENHUM DISPOSITIVO CONECTADO</string>
+    <string name="connected_to">DISPOSITIVO CONECTADO: %s</string>
+    <string name="devices_connected">DISPOSITIVOS CONECTADOS: %d</string>
+</resources>

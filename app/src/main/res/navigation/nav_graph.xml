@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/inicialFragment">
+
+    <fragment
+        android:id="@+id/inicialFragment"
+        android:name="com.lunex.lunexcontrolapp.InicialFragment"
+        android:label="fragment_inicial"
+        tools:layout="@layout/fragment_inicial" >
+        <action
+            android:id="@+id/action_inicialFragment_to_avancadoFragment"
+            app:destination="@id/avancadoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/avancadoFragment"
+        android:name="com.lunex.lunexcontrolapp.AvancadoFragment"
+        android:label="fragment_avancado" >
+        <action
+            android:id="@+id/action_avancadoFragment_to_bluetoothFragment"
+            app:destination="@id/bluetoothFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/bluetoothFragment"
+        android:name="com.lunex.lunexcontrolapp.BluetoothFragment"
+        android:label="fragment_bluetooth"
+        tools:layout="@layout/fragment_bluetooth" >
+        <action
+            android:id="@+id/action_bluetoothFragment_to_lunexFragment"
+            app:destination="@id/lunexFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/lunexFragment"
+        android:name="com.lunex.lunexcontrolapp.LunexFragment"
+        android:label="fragment_lunex" />
+</navigation>

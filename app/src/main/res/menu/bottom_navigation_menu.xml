@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/inicialFragment"
+        android:icon="@drawable/ic_home"
+        android:title="Inicial" />
+    <item
+        android:id="@+id/avancadoFragment"
+        android:icon="@drawable/ic_forward"
+        android:title="Avançado" />
+    <item
+        android:id="@+id/bluetoothFragment"
+        android:icon="@drawable/ic_bluetooth"
+        android:title="Bluetooth" />
+    <item
+        android:id="@+id/lunexFragment"
+        android:icon="@drawable/ic_phone"
+        android:title="Lunex" />
+</menu>

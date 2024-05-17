@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/azul_padrao">
+
+    <LinearLayout
+        android:id="@+id/linearLayout6"
+        android:layout_width="308dp"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout9"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout5">
+
+        <ImageView
+            android:id="@+id/video"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:importantForAccessibility="no"
+            android:paddingEnd="16dp"
+            android:src="@mipmap/ic_map_quadrado_foreground"
+            />
+
+        <TextView
+            android:id="@+id/manualVideoText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:text="Vídeo do manual      "
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout9"
+        android:layout_width="308dp"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:layout_marginBottom="50dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/catalog"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:importantForAccessibility="no"
+            android:paddingEnd="16dp"
+            android:src="@mipmap/ic_pdf_quadrado_foreground" />
+
+        <TextView
+            android:id="@+id/productsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:text="   Veja nossos produtos"
+            android:textColor="#FFFFFF"
+            tools:layout_editor_absoluteX="70dp"
+            tools:layout_editor_absoluteY="356dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout5"
+        android:layout_width="308dp"
+        android:layout_height="100dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:layout_marginTop="50dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/whatsappIcon"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:importantForAccessibility="no"
+            android:paddingEnd="16dp"
+            android:src="@mipmap/ic_wpp_quadrado_foreground" />
+
+        <TextView
+            android:id="@+id/wppText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:text="Fale agora conosco "
+            android:textColor="#FFFFFF"
+            tools:layout_editor_absoluteX="70dp"
+            tools:layout_editor_absoluteY="356dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/facebookIcon"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:importantForAccessibility="no"
+            android:padding="16dp"
+            android:src="@mipmap/ic_fb_quadrado2_foreground" />
+
+        <ImageView
+            android:id="@+id/linkedinIcon"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:importantForAccessibility="no"
+            android:padding="16dp"
+            android:src="@mipmap/ic_in_quadrado2_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/instagramIcon"
+            app:layout_constraintStart_toEndOf="@+id/facebookIcon" />
+
+        <ImageView
+            android:id="@+id/instagramIcon"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:padding="16dp"
+            android:src="@mipmap/ic_insta_quadrado_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

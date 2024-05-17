@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/device_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/nome_do_dispositivo"
+        android:textColor="#FFFFFF"/>
+
+    <ImageView
+        android:id="@+id/edit_device_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_edit"
+        android:contentDescription="@string/renomear_dispositivo"
+        android:padding="8dp"
+        android:layout_gravity="end"
+        />
+
+    <CheckBox
+        android:id="@+id/device_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
+        android:buttonTint="@android:color/white" />
+
+
+</LinearLayout>
