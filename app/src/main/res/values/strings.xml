@@ -27,4 +27,5 @@
     <string name="no_device_connected">NENHUM DISPOSITIVO CONECTADO</string>
     <string name="connected_to">DISPOSITIVO CONECTADO: %s</string>
     <string name="devices_connected">DISPOSITIVOS CONECTADOS: %d</string>
+    <string name="select_device">Select a device</string>
 </resources>

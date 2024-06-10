@@ -28,7 +28,7 @@ class InicialFragment : Fragment() {
     private lateinit var btnQuente: Button
     private lateinit var lampWhite: ImageView
     private lateinit var lampYellow: ImageView
-    private val viewModel: BluetoothViewModel by activityViewModels()
+    private val viewModel: DeviceViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -112,12 +112,12 @@ class InicialFragment : Fragment() {
                 lampWhite.visibility = View.VISIBLE
                 lampYellow.visibility = View.VISIBLE
             } else {
-                btnToggle.visibility = View.GONE
-                btnQuente.visibility = View.GONE
-                btnNeutro.visibility = View.GONE
-                btnFrio.visibility = View.GONE
-                lampWhite.visibility = View.GONE
-                lampYellow.visibility = View.GONE
+//                btnToggle.visibility = View.GONE
+//                btnQuente.visibility = View.GONE
+//                btnNeutro.visibility = View.GONE
+//                btnFrio.visibility = View.GONE
+//                lampWhite.visibility = View.GONE
+//                lampYellow.visibility = View.GONE
             }
         }
 
@@ -140,22 +140,26 @@ class InicialFragment : Fragment() {
 
         btnToggle.setOnClickListener {
             val stringToSend = "00"
-            viewModel.sendCommandToAllDevices(stringToSend)  // Change this call
+       //     viewModel.sendCommandToAllDevices(stringToSend)  // Unified call
+            viewModel.sendCommand(stringToSend)
         }
 
         btnFrio.setOnClickListener {
             val stringToSend = "01"
-            viewModel.sendCommandToAllDevices(stringToSend)  // Change this call
+         //   viewModel.sendCommandToAllDevices(stringToSend)  // Unified call
+            viewModel.sendCommand(stringToSend)
         }
 
         btnNeutro.setOnClickListener {
             val stringToSend = "11"
-            viewModel.sendCommandToAllDevices(stringToSend)  // Change this call
+          //  viewModel.sendCommandToAllDevices(stringToSend)  // Unified call
+            viewModel.sendCommand(stringToSend)
         }
 
         btnQuente.setOnClickListener {
             val stringToSend = "10"
-            viewModel.sendCommandToAllDevices(stringToSend)  // Change this call
+            //viewModel.sendCommandToAllDevices(stringToSend)  // Unified call
+            viewModel.sendCommand(stringToSend)
         }
     }
 }

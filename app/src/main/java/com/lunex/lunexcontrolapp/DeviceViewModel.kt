@@ -1,40 +1,45 @@
 package com.lunex.lunexcontrolapp
 
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.Manifest
 import android.Manifest.permission.BLUETOOTH_CONNECT
 import android.app.Application
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
+import android.bluetooth.*
+import android.bluetooth.le.*
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import java.util.UUID
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import okhttp3.OkHttpClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.*
 
-class BluetoothViewModel(application: Application) : AndroidViewModel(application) {
+class DeviceViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Bluetooth related members
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothLeScanner: BluetoothLeScanner? = null
     val discoveredDevices = MutableLiveData<List<BluetoothDevice>>()
     val isBluetoothEnabled = MutableLiveData<Boolean>()
     val isConnected = MutableLiveData<Boolean>().apply { value = false }
     private var primaryDevice: BluetoothDevice? = null
-    private val devices = mutableListOf<BluetoothDevice>()
+    val devices = mutableListOf<BluetoothDevice>()
     private val connectedGatts: MutableMap<String, BluetoothGatt> = mutableMapOf()
     private val _selectedDeviceAddresses = MutableLiveData<Set<String>>(setOf())
     val selectedDeviceAddresses: LiveData<Set<String>> = _selectedDeviceAddresses
@@ -52,6 +57,22 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         lampYellowState.postValue(false)
     }
 
+    // WiFi related members
+    private var espIpAddress: String = "http://192.168.4.1"
+    private val retrofit: Retrofit
+        get() = Retrofit.Builder()
+            .baseUrl(espIpAddress)
+            .client(OkHttpClient.Builder().build())  // Add this line
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    private val api: ApiService
+        get() = retrofit.create(ApiService::class.java)
+    private val _wifiDevices = MutableLiveData<List<ESPDevice>>()
+    val wifiDevices: LiveData<List<ESPDevice>> get() = _wifiDevices
+    private val prefsManager = SharedPreferencesManager(application)
+    private val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+    // Shared members
     val lampWhiteState = MutableLiveData<Boolean>().apply { value = false }
     val lampYellowState = MutableLiveData<Boolean>().apply { value = false }
     val bluetoothStateMessage = MutableLiveData<String?>()
@@ -63,6 +84,8 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
     private var latestWhiteLampState: Boolean? = null
     private var latestYellowLampState: Boolean? = null
 
+    private lateinit var database: DatabaseReference
+
     init {
         val bluetoothManager = application.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -73,6 +96,11 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         humidity.postValue("-- %")
         lampWhiteState.postValue(false)
         lampYellowState.postValue(false)
+        _wifiDevices.value = prefsManager.getDevices()
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(application)
+        database = FirebaseDatabase.getInstance().reference
     }
 
     companion object {
@@ -82,7 +110,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun updateBluetoothState() {
         isBluetoothEnabled.value = bluetoothAdapter?.isEnabled ?: false
-        Log.d("BluetoothViewModel", "${bluetoothAdapter?.isEnabled}")
+        Log.d("DeviceViewModel", "${bluetoothAdapter?.isEnabled}")
     }
 
     private fun loadCustomNames() {
@@ -115,18 +143,14 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         // Check permissions
-        if (ActivityCompat.checkSelfPermission(context, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(context, ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionsEvent.postValue(true)
             return
         }
 
         clearDiscoveredDevices()
         bluetoothLeScanner?.startScan(scanCallback)
-    }
-
-    fun setSelectedDevice(device: BluetoothDevice?) {
-        selectedDevice = device
     }
 
     fun clearDiscoveredDevices() {
@@ -143,7 +167,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             super.onScanResult(callbackType, result)
             val device = result.device
             val context = getApplication<Application>().applicationContext
-            if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                 if (device.name == "SmartLight" && !devices.contains(device)) {
                     Log.d("ScanCallback", "Device found: ${result.device.address}")
                     devices.add(device)
@@ -157,7 +181,7 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             results.forEach { result ->
                 val device = result.device
                 val context = getApplication<Application>().applicationContext
-                if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                     if (device.name == "SmartLight" && !devices.contains(device)) {
                         devices.add(device)
                     }
@@ -166,6 +190,10 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             discoveredDevices.postValue(devices)
         }
 
+        override fun onScanFailed(errorCode: Int) {
+            super.onScanFailed(errorCode)
+            Log.e("ScanCallback", "Scan failed with error: $errorCode")
+        }
     }
 
     override fun onCleared() {
@@ -175,27 +203,27 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun connectToDevice(context: Context, device: BluetoothDevice) {
-        if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             val gatt = device.connectGatt(context, false, gattCallback)
             connectedGatts[device.address] = gatt
             updateConnectedDevicesList()
             if (primaryDevice == null) {
                 primaryDevice = device
             }
-            Log.d("BluetoothViewModel", "Connecting to: ${device.address}")
+            Log.d("DeviceViewModel", "Connecting to: ${device.address}")
         } else {
             bluetoothStateMessage.postValue("Permission BLUETOOTH_CONNECT not granted")
-            Log.e("BluetoothViewModel", "Permission BLUETOOTH_CONNECT not granted")
+            Log.e("DeviceViewModel", "Permission BLUETOOTH_CONNECT not granted")
         }
     }
 
     fun disconnectAllDevices() {
         val context = getApplication<Application>().applicationContext
-        if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             connectedGatts.values.forEach { gatt ->
                 gatt.disconnect()
                 gatt.close()
-                Log.d("BluetoothViewModel", "Disconnecting and closing GATT for: ${gatt.device.address}")
+                Log.d("DeviceViewModel", "Disconnecting and closing GATT for: ${gatt.device.address}")
             }
             connectedGatts.clear()
             primaryDevice = null
@@ -209,15 +237,15 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             super.onConnectionStateChange(gatt, status, newState)
             val context = getApplication<Application>().applicationContext
 
-            if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                 when (newState) {
                     BluetoothProfile.STATE_CONNECTED -> {
-                        Log.d("BluetoothViewModel", "Device connected: ${gatt.device.address}")
+                        Log.d("DeviceViewModel", "Device connected: ${gatt.device.address}")
                         isConnected.postValue(true)
                         gatt.discoverServices()
                     }
                     BluetoothProfile.STATE_DISCONNECTED -> {
-                        Log.d("BluetoothViewModel", "Device disconnected: ${gatt.device.address}")
+                        Log.d("DeviceViewModel", "Device disconnected: ${gatt.device.address}")
                         isConnected.postValue(false)
                         connectedGatts.remove(gatt.device.address)
                         if (primaryDevice?.address == gatt.device.address) {
@@ -234,15 +262,14 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
             val context = getApplication<Application>().applicationContext
-            if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     val service = gatt.getService(SERVICE_UUID)
                     if (service != null) {
                         val characteristic = service.getCharacteristic(CHARACTERISTIC_UUID)
                         if (characteristic != null) {
                             gatt.setCharacteristicNotification(characteristic, true)
-                            val descriptor =
-                                characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
+                            val descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"))
                             descriptor?.let {
                                 it.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                                 gatt.writeDescriptor(it)
@@ -258,7 +285,6 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             val value = characteristic.value
             value?.let {
                 val data = String(it, Charsets.UTF_8)
-                // Log.d("BluetoothViewModel", "Characteristic changed: $data")
                 updateData(data, gatt.device)
             }
         }
@@ -266,16 +292,72 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         override fun onCharacteristicWrite(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
             super.onCharacteristicWrite(gatt, characteristic, status)
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d("BluetoothViewModel", "Characteristic write successful: ${characteristic.uuid}")
+                Log.d("DeviceViewModel", "Characteristic write successful: ${characteristic.uuid}")
             } else {
-                Log.e("BluetoothViewModel", "Characteristic write failed: ${characteristic.uuid}, status: $status")
+                Log.e("DeviceViewModel", "Characteristic write failed: ${characteristic.uuid}, status: $status")
             }
         }
     }
 
-    fun sendCommandToAllDevices(command: String) {
-        connectedGatts.values.forEach { gatt ->
-            sendCommandToDevice(gatt, command)
+//    fun sendCommandToAllDevices(command: String) {
+//        // Send command via BLE
+//        if (connectedGatts.isNotEmpty()) {
+//            connectedGatts.values.forEach { gatt ->
+//                sendCommandToDevice(gatt, command)
+//            }
+//        }
+//        // Send command via WiFi
+//        else if (_wifiDevices.value?.isNotEmpty() == true) {
+//            _wifiDevices.value?.filter { it.isSelected }?.forEach { device ->
+//                val call = api.sendCommand(command)
+//                call.enqueue(object : Callback<Void> {
+//                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+//                        if (response.isSuccessful) {
+//                            Log.d("Command", "Command sent successfully to ${device.id}")
+//                        } else {
+//                            Log.d("Command", "Failed to send command to ${device.id}")
+//                        }
+//                    }
+//
+//                    override fun onFailure(call: Call<Void>, t: Throwable) {
+//                        Log.e("Command", "Error: ${t.message}")
+//                    }
+//                })
+//            }
+//        }
+//        // Send command via Firebase
+//        else {
+//            sendCommandToFirebase(command)
+//        }
+//    }
+
+    private fun sendCommandToFirebase(command: String) {
+        database.child("commands").setValue(command)
+            .addOnSuccessListener {
+                Log.d("Firebase", "Command sent successfully")
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firebase", "Failed to send command", e)
+            }
+    }
+
+
+    fun sendCommand(command: String) {
+        _wifiDevices.value?.filter { it.isSelected }?.forEach { device ->
+            val call = api.sendCommand(command)
+            call.enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        Log.d("Command", "Command sent successfully to ${device.id}")
+                    } else {
+                        Log.d("Command", "Failed to send command to ${device.id}")
+                    }
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    Log.e("Command", "Error: ${t.message}")
+                }
+            })
         }
     }
 
@@ -283,15 +365,24 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         val serviceUUID = UUID.fromString(SERVICE_UUID.toString())
         val characteristicUUID = UUID.fromString(CHARACTERISTIC_UUID.toString())
         val service = gatt.getService(serviceUUID)
-        val characteristic = service?.getCharacteristic(characteristicUUID)
         val context = getApplication<Application>().applicationContext
-        if (ContextCompat.checkSelfPermission(context, BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-            gatt.getService(serviceUUID)?.getCharacteristic(characteristicUUID)?.let { characteristic ->
-                characteristic.value = command.toByteArray(Charsets.UTF_8)
+        service?.getCharacteristic(characteristicUUID)?.let { characteristic ->
+            characteristic.value = command.toByteArray(Charsets.UTF_8)
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    BLUETOOTH_CONNECT
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 if (gatt.writeCharacteristic(characteristic)) {
-                    Log.d("BluetoothViewModel", "Command $command sent to device ${gatt.device.address}")
+                    Log.d(
+                        "DeviceViewModel",
+                        "Command $command sent to device ${gatt.device.address}"
+                    )
                 } else {
-                    Log.e("BluetoothViewModel", "Failed to send command $command to device ${gatt.device.address}")
+                    Log.e(
+                        "DeviceViewModel",
+                        "Failed to send command $command to device ${gatt.device.address}"
+                    )
                 }
             }
         }
@@ -304,12 +395,12 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
     fun updateData(data: String, device: BluetoothDevice) {
         if (device != primaryDevice) return
 
-        Log.d("BluetoothViewModel", "Received data: $data")
+        Log.d("DeviceViewModel", "Received data: $data")
 
         if (data.startsWith("T:") && data.contains("U:")) {
             latestTemperature = data.substringAfter("T:").substringBefore("º").trim()
             latestHumidity = data.substringAfter("U:").substringBefore("%").trim()
-            Log.d("BluetoothViewModel", "Parsed temperature: $latestTemperature, humidity: $latestHumidity")
+            Log.d("DeviceViewModel", "Parsed temperature: $latestTemperature, humidity: $latestHumidity")
         }
 
         if (data.startsWith("H:") && data.contains("C:")) {
@@ -317,11 +408,11 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
             val coldValue = data.substringAfter("C:").trim().toIntOrNull() ?: 0
             latestWhiteLampState = coldValue > 0
             latestYellowLampState = warmValue > 0
-            Log.d("BluetoothViewModel", "Parsed white lamp state: $latestWhiteLampState, yellow lamp state: $latestYellowLampState")
+            Log.d("DeviceViewModel", "Parsed white lamp state: $latestWhiteLampState, yellow lamp state: $latestYellowLampState")
         }
 
         if (latestTemperature != null && latestHumidity != null && latestWhiteLampState != null && latestYellowLampState != null) {
-            Log.d("BluetoothViewModel", "Parsed temp: $latestTemperature, humi: $latestHumidity, whiteLampState: $latestWhiteLampState, yellowLampState: $latestYellowLampState")
+            Log.d("DeviceViewModel", "Parsed temp: $latestTemperature, humi: $latestHumidity, whiteLampState: $latestWhiteLampState, yellowLampState: $latestYellowLampState")
 
             if (_connectedDevices.value?.size == 1) {
                 temperature.postValue("$latestTemperature °C")
@@ -346,5 +437,87 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         handler.postDelayed(resetDataRunnable, 5000)
     }
 
+    fun updateIpAddress(newIpAddress: String) {
+        espIpAddress = "http://$newIpAddress"
+        Log.d("WiFiDebug", "Updated ESP IP address to: $espIpAddress")
+    }
 
+    fun connectToWiFi(ssid: String, password: String) {
+        val call = api.connectToWiFi(ssid, password)
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Log.d("WiFi", "Connected successfully")
+                    val newIpAddress = extractIpAddressFromResponse(response)
+                    updateIpAddress(newIpAddress)
+                    getDeviceInfo()
+                } else {
+                    Log.d("WiFi", "Failed to connect")
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e("WiFi", "Error: ${t.message}")
+            }
+        })
+    }
+
+    private fun extractIpAddressFromResponse(response: Response<Void>): String {
+        // Extract the IP address from the response if your ESP sends it
+        // This is just a placeholder, actual implementation depends on your response format
+        return "extracted_ip_address"
+    }
+
+    // Method to connect to WiFi and update IP address
+    fun connectToWiFiAndFetchIp(ssid: String, password: String) {
+        val call = api.connectToWiFi(ssid, password)
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Log.d("WiFiDebug", "Connected successfully")
+                    getDeviceInfo()
+                } else {
+                    Log.d("WiFiDebug", "Failed to connect")
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e("WiFiDebug", "Error: ${t.message}")
+            }
+        })
+    }
+
+    private fun getDeviceInfo() {
+        val call = api.getDeviceInfo()
+        call.enqueue(object : Callback<DeviceInfo> {
+            override fun onResponse(call: Call<DeviceInfo>, response: Response<DeviceInfo>) {
+                if (response.isSuccessful) {
+                    val deviceInfo = response.body()
+                    deviceInfo?.let {
+                        // Update the IP address dynamically
+                        updateIpAddress(it.ip)
+                    }
+                } else {
+                    Log.d("DeviceInfo", "Failed to get device info")
+                }
+            }
+
+            override fun onFailure(call: Call<DeviceInfo>, t: Throwable) {
+                Log.e("DeviceInfo", "Error: ${t.message}")
+            }
+        })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun waitForWiFiConnection(): Boolean {
+        for (i in 0 until 20) {
+            val network = connectivityManager.activeNetwork
+            val capabilities = connectivityManager.getNetworkCapabilities(network)
+            if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return true
+            }
+            Thread.sleep(1000)
+        }
+        return false
+    }
 }

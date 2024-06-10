@@ -25,7 +25,7 @@ class BluetoothFragment : Fragment() {
 
     private var _binding: FragmentBluetoothBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: BluetoothViewModel by activityViewModels()
+    private val viewModel: DeviceViewModel by activityViewModels()
     private lateinit var adapter: BluetoothDeviceAdapter // Lateinit declared here
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

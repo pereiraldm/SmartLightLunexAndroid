@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -18,9 +19,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var temperatureText: TextView
     private lateinit var humidityText: TextView
     private lateinit var logoImageView: ImageView
+    private lateinit var viewModel: DeviceViewModel
 
     private fun setupObservers() {
-        val viewModel: BluetoothViewModel by viewModels()
+        val viewModel: DeviceViewModel by viewModels()
 
         viewModel.temperature.observe(this) { temperature ->
             temperatureText.text = temperature
@@ -42,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val viewModel: BluetoothViewModel by viewModels()
+        viewModel = ViewModelProvider(this)[DeviceViewModel::class.java]
 
         viewModel.scanForDevices() // This is an example. Adjust based on your app's flow.
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
@@ -68,6 +70,13 @@ class MainActivity : AppCompatActivity() {
             val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.lunex.com.br/"))
             startActivity(browserIntent)
         }
+
+        // Dynamically set the IP address
+        val newIpAddress = "10.0.0.98" // This should be dynamically retrieved from the ESP32's response
+        viewModel.updateIpAddress(newIpAddress)
+
+        // Optionally, trigger the viewModel to fetch device info
+        // viewModel.getDeviceInfo()
 
         setupObservers()
         showWelcomeDialog()

@@ -9,6 +9,10 @@
         android:icon="@drawable/ic_forward"
         android:title="Avançado" />
     <item
+        android:id="@+id/wifiFragment"
+        android:icon="@drawable/ic_wifi"
+        android:title="WIFI" />
+    <item
         android:id="@+id/bluetoothFragment"
         android:icon="@drawable/ic_bluetooth"
         android:title="Bluetooth" />

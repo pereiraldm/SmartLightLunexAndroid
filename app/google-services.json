@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "401457025909",
+    "project_id": "smartlight-21c8a",
+    "storage_bucket": "smartlight-21c8a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401457025909:android:d4432bd75192cd68deb93c",
+        "android_client_info": {
+          "package_name": "com.lunex.lunexcontrolapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwvcMR97BDutgtid2acZRPqZDd6nH8k6I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -28,7 +28,7 @@ class AvancadoFragment : Fragment() {
     private lateinit var linearBlock: LinearLayout
     private lateinit var seekBarBrightness: SeekBar
     private lateinit var brightnessValue: TextView
-    private val viewModel: BluetoothViewModel by activityViewModels()
+    private val viewModel: DeviceViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,7 +71,7 @@ class AvancadoFragment : Fragment() {
             seekBar.isEnabled = isChecked
             seekBarBrightness.isEnabled = isChecked
             val command = if (isChecked) "avancado" else "desligarAvancado"
-            viewModel.sendCommandToAllDevices(command)  // Change this call
+       //     viewModel.sendCommandToAllDevices(command)  // Change this call
             if (isChecked) {
                 // Adding a slight delay to ensure the command is processed by the device
                 view.postDelayed({
@@ -188,12 +188,12 @@ class AvancadoFragment : Fragment() {
     private fun sendSeekBarValueToDevice(progress: Int) {
         val userValue = progress + 3000 // Convert progress back to user range
         val scaledValue = scaleSeekBarValue(userValue)
-        viewModel.sendCommandToAllDevices(scaledValue.toString())  // Change this call
+      //  viewModel.sendCommandToAllDevices(scaledValue.toString())  // Change this call
     }
 
     private fun sendBrightnessValueToDevice(brightness: Int) {
         // Convert brightness to string and send to device
-        viewModel.sendCommandToAllDevices("INTENSIDADE:$brightness")  // Change this call
+        //viewModel.sendCommandToAllDevices("INTENSIDADE:$brightness")  // Change this call
         Log.d("AvancadoFragment", "Sending Brightness value: $brightness")
     }
     companion object {

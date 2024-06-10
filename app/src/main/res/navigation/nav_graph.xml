@@ -19,7 +19,15 @@
         android:name="com.lunex.lunexcontrolapp.AvancadoFragment"
         android:label="fragment_avancado" >
         <action
-            android:id="@+id/action_avancadoFragment_to_bluetoothFragment"
+            android:id="@+id/action_avancadoFragment_to_wifiFragment"
+            app:destination="@id/wifiFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/wifiFragment"
+        android:name="com.lunex.lunexcontrolapp.WifiFragment"
+        android:label="fragment_wifi" >
+        <action
+            android:id="@+id/action_wifiFragment_to_bluetoothFragment"
             app:destination="@id/bluetoothFragment" />
     </fragment>
     <fragment

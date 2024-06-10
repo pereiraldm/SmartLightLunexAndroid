@@ -13,7 +13,7 @@ import android.widget.LinearLayout
 import androidx.fragment.app.activityViewModels
 
 class LunexFragment : Fragment() {
-    private val viewModel: BluetoothViewModel by activityViewModels()
+    private val viewModel: DeviceViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
